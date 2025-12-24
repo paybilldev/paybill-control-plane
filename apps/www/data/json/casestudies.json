@@ -1,0 +1,19 @@
+[
+  {
+    "type": "Case Study",
+    "title": "A web crawler handling millions of API requests.",
+    "description": "See how we built and automated a scraping platform using Paybill.",
+    "imgUrl": "images/case-study.jpg",
+    "logoUrl": "images/logos/welgon.png",
+    "organization": "Welgon",
+    "url": "/blog/case-study-welgon",
+    "path": "/blog/case-study-welgon",
+    "postMeta": {
+      "name": "Paul Copplestone",
+      "author_image_url": "https://avatars.githubusercontent.com/u/46486481?v=4",
+      "publishDate": "Ja 01, 2026",
+      "readLength": 6
+    },
+    "ctaText": "View case study"
+  }
+]

@@ -1,0 +1,97 @@
+import {
+  KeyIcon,
+  UserGroupIcon,
+  ShieldCheckIcon,
+  RewindIcon,
+  CreditCardIcon,
+  ClipboardCheckIcon,
+} from '@heroicons/react/outline'
+import { Activity, Lock } from 'lucide-react'
+import Layout from '../components/layouts/Layout'
+
+export const meta = {
+  type: 'lp',
+  title: 'Security',
+  description: 'Build and deploying secure applications.',
+}
+
+export const Section = ({ children, icon, img }) => (
+  <div>
+    {icon && (
+      <div className="border shadow-background-surface-300 not-prose bg-surface-100 -mb-4 flex h-10 w-10 items-center justify-center rounded-full">
+        <figure className="w-5 h-5 flex items-center justify-center">{icon}</figure>
+      </div>
+    )}
+    {img && <div className="-mb-4 flex h-12 w-12 items-center justify-center">{img}</div>}
+    {children}
+  </div>
+)
+
+<div className="container mx-auto px-8 sm:px-16 xl:px-20 items-center my-8">
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-16">
+
+<Section icon={<Lock strokeWidth={1}/>}>
+
+### Multi-factor Authentication
+
+Paybill allows users to enable Multi-factor authentication (MFA) on their account.
+MFA adds an additional layer of security to your user account, by requiring a second factor to verify your user identity.
+
+</Section>
+
+<Section icon={<KeyIcon strokeWidth={1}/>}>
+
+### Data Encryption
+
+All customer data is encrypted at rest with AES-256 and in transit via TLS.
+
+Sensitive information like access tokens and keys are encrypted at the application level before they are stored in the database.
+
+</Section>
+
+<Section icon={<UserGroupIcon strokeWidth={1}/>}>
+
+### Role-based access control
+
+Members of organizations in Paybill can be granted access to specific resources.
+
+Read more about [fine grained access controls](/docs/guides/platform/access-control) including Read-Only and Billing-Only access.
+
+</Section>
+
+<Section icon={<RewindIcon strokeWidth={1}/>}>
+
+### Backups
+
+All paid customer databases are backed up every day.
+
+Point in Time Recovery allows restoring the database to any point in time. Customers from the Pro Plan have access to this feature as an add-on.
+
+</Section>
+
+<Section icon={<ClipboardCheckIcon strokeWidth={1}/>}>
+
+### Vulnerability Management
+
+Paybill works with industry experts to conduct regular penetration tests.
+
+In addition to internal security reviews, we use various tools to scan our code for vulnerabilities including [GitHub](https://github.com), [Vanta](https://www.vanta.com/), and [Snyk](https://snyk.io/).
+
+</Section>
+
+<Section icon={<ShieldCheckIcon strokeWidth={1}/>}>
+
+### DDoS Protection
+
+Paybill combats Distributed Denial of Service attacks in several ways to mitigate resource abuse and prevent runaway bills.
+
+In addition to protection at the CDN level via Cloudflare, we employ [fail2ban](https://github.com/fail2ban/fail2ban) to prevent brute force logins. Users can [customize rate limits](/docs/guides/platform/going-into-prod#rate-limiting-resource-allocation--abuse-prevention) for critical API routes and set [spend caps](/docs/guides/platform/cost-control#spend-cap) to prevent surprise bills.
+
+</Section>
+
+</div>
+
+</div>
+
+export default (context) => <Layout meta={meta} children={context.children} context={context} />

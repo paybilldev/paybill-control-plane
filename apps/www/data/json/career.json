@@ -1,0 +1,25 @@
+{
+  "contributors": ["ebartile"],
+  "benefits": [
+    {
+      "icon": "remote",
+      "title": "Fully Remote",
+      "text": "We hire globally. We believe you can do your best work from anywhere. There are no Paybill offices, but we provide a co-working membership that you can use anywhere in the world."
+    },
+    {
+      "icon": "tech_allowance",
+      "title": "Tech Allowance",
+      "text": "Use this budget for any technology you need for your work setup."
+    },
+    {
+      "icon": "offsite",
+      "title": "Annual Off-Sites",
+      "text": "We believe in the value of in-person time, so we all come together annually for a week. Each year we pick somewhere different in the world. It's a highlight of the year!"
+    },
+    {
+      "icon": "flexibility",
+      "title": "Flexible Work",
+      "text": "Work remotely from anywhere in the world. We work in teams, but we work asynchronously. You know what you need to do and when it needs to be done."
+    }
+  ]
+}

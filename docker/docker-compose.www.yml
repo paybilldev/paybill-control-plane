@@ -1,0 +1,77 @@
+services:
+  www:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.www
+    image: www:local
+    environment:
+      DOCKER_SOCKET_LOCATION: /var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  docs:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.docs
+    image: docs:local
+    environment:
+      DOCKER_SOCKET_LOCATION: /var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  kong:
+    container_name: platform-kong-www
+    image: kong:2.8.1
+    restart: unless-stopped
+    ports:
+      - ${KONG_HTTP_PORT}:8000/tcp
+      - ${KONG_HTTPS_PORT}:8443/tcp
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+
+    volumes:
+      - type: bind
+        source: ./volumes/api/kong.yml
+        target: /platform-overlay/kong.yml
+        read_only: true
+      - type: bind
+        source: ./volumes/api/kong.www.yml
+        target: /platform-overlay/kong.www.yml
+        read_only: true
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+          set -euo pipefail
+          mkdir -p /platform-overlay /home/kong
+          DASHBOARD_BASIC_AUTH_ENABLED="${PLATFORM_DASHBOARD_BASIC_AUTH_ENABLED:-true}"
+
+          # Load base kong.yml
+          eval "echo \"$(cat /platform-overlay/kong.yml)\"" > /home/kong/kong.work.yml
+
+          # Insert anonymous consumer rule
+          awk 'BEGIN{inserted=0} {print; if(!inserted && $0 ~ /hide_credentials: false/){print "          anonymous: anon"; inserted=1}}' /home/kong/kong.work.yml > /home/kong/kong.tmp
+          mv /home/kong/kong.tmp /home/kong/kong.work.yml
+
+          # Enable/disable basic-auth plugin
+          awk -v enabled="$DASHBOARD_BASIC_AUTH_ENABLED" 'BEGIN{inserted=0} {print; if(!inserted && $0 ~ /- name: basic-auth/){print "        enabled: " (enabled=="" ? "true" : enabled); inserted=1}}' /home/kong/kong.work.yml > /home/kong/kong.tmp
+          mv /home/kong/kong.tmp /home/kong/kong.work.yml
+
+          # Append www overlay config if exists
+          if [ -s /platform-overlay/kong.www.yml ]; then
+            printf '\n' >> /home/kong/kong.work.yml
+            eval "echo \"$(cat /platform-overlay/kong.www.yml)\"" >> /home/kong/kong.work.yml
+          fi
+
+          mv /home/kong/kong.work.yml /home/kong/kong.yml
+          exec /docker-entrypoint.sh kong docker-start

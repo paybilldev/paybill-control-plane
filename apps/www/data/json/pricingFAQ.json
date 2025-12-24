@@ -1,0 +1,10 @@
+[
+  {
+    "question": "Can I cap my usage so my bill doesn't run over?",
+    "answer": "Yes. Spend caps are on by default on the Pro Plan. You can turn spend caps off for usage beyond the Plan limits to pay as you grow."
+  },
+  {
+    "question": "I'm worried I could end up with a huge bill at the end of the month.",
+    "answer": "Spend caps are on by default and you need to toggle them off from your dashboard to enable pay as you grow pricing."
+  }
+]

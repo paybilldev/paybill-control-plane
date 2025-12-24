@@ -1,0 +1,13 @@
+# Root folder of this turbo monorepo
+# Doesn't send useless context to Docker daemon
+.git
+.github
+docker
+node_modules
+tests
+
+.next
+.env.*
+
+.dockerignore
+Dockerfile

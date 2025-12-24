@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "billing:all": {
+      "type": "boolean",
+      "description": "Enable the billing settings page"
+    }
+  },
+  "required": ["billing:all"],
+  "additionalProperties": false
+}

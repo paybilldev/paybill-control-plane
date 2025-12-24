@@ -1,0 +1,27 @@
+  - name: www
+    _comment: 'WWW: /* -> http://www:3000/*'
+    url: http://www:3000/
+    routes:
+      - name: www-all
+        strip_path: true
+        paths:
+          - /
+    plugins:
+      - name: cors
+      - name: basic-auth
+        config:
+          hide_credentials: true
+
+  - name: docs
+    _comment: 'Docs: /* -> http://docs:5000/*'
+    url: http://docs:5000/
+    routes:
+      - name: docs-all
+        strip_path: true
+        paths:
+          - /docs
+    plugins:
+      - name: cors
+      - name: basic-auth
+        config:
+          hide_credentials: true

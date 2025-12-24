@@ -1,0 +1,98 @@
+module.exports = [
+  {
+    protocol: 'https',
+    hostname: 'api.producthunt.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'avatars.githubusercontent.com',
+    port: '',
+    pathname: '/u/*',
+  },
+  {
+    protocol: 'https',
+    hostname: 'ca.slack-edge.com',
+    port: '',
+    pathname: '/*',
+  },
+  {
+    protocol: 'https',
+    hostname: 'colab.research.google.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'github.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 's3-us-west-2.amazonaws.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'img.youtube.com',
+    port: '',
+    pathname: '/vi/*',
+  },
+  {
+    protocol: 'https',
+    hostname: 'images.unsplash.com',
+    port: '',
+    pathname: '/photo-*',
+  },
+  {
+    protocol: 'http',
+    hostname: '127.0.0.1',
+    port: '54321',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'pbs.twimg.com',
+    port: '',
+    pathname: '/profile_images/**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'res.cloudinary.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'paybill.dev',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'paybill.ke',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'paybill.co.ke',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'user-images.githubusercontent.com',
+    port: '',
+    pathname: '**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'media.licdn.com',
+    port: '',
+    pathname: '/dms/image/**',
+  },
+]

@@ -1,0 +1,32 @@
+{
+  "entries": [
+    {
+      "event": {
+        "api_id": "evt_987654321",
+        "calendar_api_id": "cal_555555555",
+        "name": "Online Product Launch 2026",
+        "description": "Join us live on YouTube as we unveil our new product for 2026!",
+        "start_at": "2026-01-01T09:00:00Z",
+        "end_at": "2026-01-01T11:00:00Z",
+        "timezone": "Africa/Nairobi",
+        "url": "https://www.youtube.com/watch?v=#",
+        "visibility": "public",
+        "geo_address_json": {
+          "city": "Online",
+          "type": "online",
+          "region": "Virtual",
+          "address": "YouTube Live",
+          "country": "Global",
+          "latitude": "0",
+          "place_id": "youtube_live_event",
+          "longitude": "0",
+          "city_state": "Online Event",
+          "description": "YouTube Livestream Event",
+          "full_address": "https://www.youtube.com/watch?v=12345LIVE"
+        }
+      }
+    }
+  ],
+  "has_more": false,
+  "next_cursor": null
+}

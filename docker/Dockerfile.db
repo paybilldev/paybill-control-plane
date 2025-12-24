@@ -1,0 +1,11 @@
+FROM postgres:15.8
+
+# Copy your custom entrypoint script
+COPY docker/scripts/password-sync-entrypoint.sh /usr/local/bin/password-sync-entrypoint.sh
+RUN chmod +x /usr/local/bin/password-sync-entrypoint.sh
+
+# Set custom entrypoint
+ENTRYPOINT ["/usr/local/bin/password-sync-entrypoint.sh"]
+
+# Default command
+CMD ["postgres"]

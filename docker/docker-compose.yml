@@ -1,0 +1,296 @@
+# Usage
+#   Start:              docker compose up
+#   With helpers:       docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml up
+#   Stop:               docker compose down
+#   Destroy:            docker compose -f docker-compose.yml -f ./dev/docker-compose.dev.yml down -v --remove-orphans
+#   Reset everything:  ./reset.sh
+
+name: paybill
+
+services:
+
+  platform:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.platform
+      args:
+        PLATFORM_IMAGE: 2025.10.01-sha-8460121
+    image: paybill-platform-platform:local
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://platform:3000/api/status').then((r) => {if (r.status !== 200) throw new Error(r.status)})"
+        ]
+      timeout: 10s
+      interval: 5s
+      retries: 3
+    depends_on:
+      platform-api:
+        condition: service_healthy
+      analytics:
+        condition: service_healthy
+    environment:
+      # Binds nestjs listener to both IPv4 and IPv6 network interfaces
+      HOSTNAME: "::"
+      DOCKER_SOCKET_LOCATION: /var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  platform-api:
+    container_name: platform-api
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.platform.api
+    environment:
+      PORT: "4210"
+      HOST: "0.0.0.0"
+      PLATFORM_API_REPO_ROOT: /workspace
+      PLATFORM_PROJECTS_ROOT: ${PWD}/platform-projects
+      PLATFORM_ORCHESTRATOR_URL: http://runtime-agent:8085
+      PLATFORM_ORCHESTRATOR_TOKEN: ${PLATFORM_ORCHESTRATOR_TOKEN:-platform-runtime-agent}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+    volumes:
+      - platform-api-data:/app/apps/platform-api/data
+      - ..:/workspace:ro
+      - ${PWD}/platform-projects:${PWD}/platform-projects
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      db:
+        condition: service_healthy
+      runtime-agent:
+        condition: service_started
+      kong:
+        condition: service_healthy
+    restart: unless-stopped
+
+  runtime-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.runtime-agent
+    container_name: runtime-agent
+    environment:
+      RUNTIME_AGENT_LISTEN_ADDR: ":8085"
+      RUNTIME_AGENT_COMMAND_TIMEOUT: 15m
+      RUNTIME_AGENT_PLATFORM_HOST: host.docker.internal
+      RUNTIME_AGENT_AUTH_TOKEN: ${PLATFORM_ORCHESTRATOR_TOKEN:-platform-runtime-agent}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD}/platform-projects:${PWD}/platform-projects
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  kong:
+    container_name: platform-kong
+    image: kong:2.8.1
+    restart: unless-stopped
+    ports:
+      - ${KONG_HTTP_PORT}:8000/tcp
+      - ${KONG_HTTPS_PORT}:8443/tcp
+    depends_on:
+      analytics:
+        condition: service_healthy
+
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination,ip-restriction
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
+
+    volumes:
+      - type: bind
+        source: ./volumes/api/kong.yml
+        target: /platform-overlay/kong.yml
+        read_only: true
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+          set -euo pipefail
+          mkdir -p /platform-overlay /home/kong
+          DASHBOARD_BASIC_AUTH_ENABLED="${PLATFORM_DASHBOARD_BASIC_AUTH_ENABLED:-true}"
+
+          # Load base kong.yml (THIS WAS MISSING BEFORE)
+          eval "echo \"$(cat /platform-overlay/kong.yml)\"" > /home/kong/kong.work.yml
+
+          # Insert anonymous consumer rule
+          awk 'BEGIN{inserted=0} {print; if(!inserted && $0 ~ /hide_credentials: false/){print "          anonymous: anon"; inserted=1}}' /home/kong/kong.work.yml > /home/kong/kong.tmp
+          mv /home/kong/kong.tmp /home/kong/kong.work.yml
+
+          # Enable/disable basic-auth plugin
+          awk -v enabled="$DASHBOARD_BASIC_AUTH_ENABLED" 'BEGIN{inserted=0} {print; if(!inserted && $0 ~ /- name: basic-auth/){print "        enabled: " (enabled=="" ? "true" : enabled); inserted=1}}' /home/kong/kong.work.yml > /home/kong/kong.tmp
+          mv /home/kong/kong.tmp /home/kong/kong.work.yml
+
+          # Append overlay config if exists (same file)
+          if [ -s /platform-overlay/kong.yml ]; then
+            printf '\n' >> /home/kong/kong.work.yml
+            eval "echo \"$(cat /platform-overlay/kong.yml)\"" >> /home/kong/kong.work.yml
+          fi
+
+          mv /home/kong/kong.work.yml /home/kong/kong.yml
+          exec /docker-entrypoint.sh kong docker-start
+          
+  analytics:
+    container_name: platform-analytics
+    restart: unless-stopped
+    ports:
+      - 4000:4000
+    # Uncomment to use Big Query backend for analytics
+    # volumes:
+    #   - type: bind
+    #     source: ${PWD}/gcloud.json
+    #     target: /opt/app/rel/logflare/bin/gcloud.json
+    #     read_only: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "http://localhost:4000/health"
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    depends_on:
+      db:
+        # Disable this if you are using an external Postgres database
+        condition: service_healthy
+    environment:
+      LOGFLARE_NODE_HOST: 127.0.0.1
+      DB_USERNAME: platform_admin
+      DB_DATABASE: _platform
+      DB_HOSTNAME: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_PORT}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_SCHEMA: _analytics
+      LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
+      LOGFLARE_PRIVATE_ACCESS_TOKEN: ${LOGFLARE_PRIVATE_ACCESS_TOKEN}
+      LOGFLARE_SINGLE_TENANT: true
+      LOGFLARE_MODE: true
+
+      # Comment variables to use Big Query backend for analytics
+      POSTGRES_BACKEND_URL: postgresql://platform_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/_platform
+      POSTGRES_BACKEND_SCHEMA: _analytics
+      LOGFLARE_FEATURE_FLAG_OVERRIDE: multibackend=true
+      # Uncomment to use Big Query backend for analytics
+      # GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      # GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
+
+  # Comment out everything below this point if you are using an external Postgres database
+  db:
+    container_name: platform-db
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.db
+    restart: unless-stopped
+    volumes:
+      # Must be superuser to alter reserved role
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:Z
+      # PGDATA directory is persisted between restarts
+      - ./volumes/db/data:/var/lib/postgresql/data:Z
+      # Changes required for internal platform data such as _analytics
+      - ./volumes/db/_platform.sql:/docker-entrypoint-initdb.d/migrations/97-_platform.sql:Z
+      # Changes required for Analytics support
+      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:Z
+      # Changes required for Pooler support
+      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:Z
+      # Use named volume to persist pgsodium decryption key between restarts
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test:
+        [
+        "CMD",
+        "pg_isready",
+        "-U",
+        "postgres",
+        "-h",
+        "localhost"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      vector:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    command:
+      [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal" # prevents Realtime polling queries from appearing in logs
+      ]
+
+  # Update the DATABASE_URL if you are using an external Postgres database
+  supavisor:
+    container_name: platform-pooler
+    restart: unless-stopped
+    ports:
+      - ${POSTGRES_PORT}:5432
+      - ${POOLER_PROXY_PORT_TRANSACTION}:6543
+    volumes:
+      - ./volumes/pooler/pooler.exs:/etc/pooler/pooler.exs:ro,z
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "-sSfL",
+          "--head",
+          "-o",
+          "/dev/null",
+          "http://127.0.0.1:4000/api/health"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+      analytics:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ecto://platform_admin:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/_platform
+      CLUSTER_POSTGRES: true
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      VAULT_ENC_KEY: ${VAULT_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      REGION: local
+      ERL_AFLAGS: -proto_dist inet_tcp
+      POOLER_TENANT_ID: ${POOLER_TENANT_ID}
+      POOLER_DEFAULT_POOL_SIZE: ${POOLER_DEFAULT_POOL_SIZE}
+      POOLER_MAX_CLIENT_CONN: ${POOLER_MAX_CLIENT_CONN}
+      POOLER_POOL_MODE: transaction
+      DB_POOL_SIZE: ${POOLER_DB_POOL_SIZE}
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
+      ]
+
+volumes:
+  db-config:
+  platform-api-data:

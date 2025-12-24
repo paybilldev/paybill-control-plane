@@ -1,0 +1,92 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**"]
+    },
+    "platform#build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "ANALYZE",
+        "NEXT_PUBLIC_BASE_PATH",
+        "NEXT_PUBLIC_STRIPE_PUBLIC_KEY",
+        "NEXT_PUBLIC_ENVIRONMENT",
+        "NEXT_PUBLIC_SITE_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_DOCS_URL",
+        "NEXT_PUBLIC_CONFIGCAT_SDK_KEY",
+        "NEXT_PUBLIC_CONFIGCAT_PROXY_URL",
+        "NEXT_PUBLIC_HCAPTCHA_SITE_KEY",
+        "NEXT_PUBLIC_NODE_ENV",
+        "NEXT_PUBLIC_GOOGLE_MAPS_KEY",
+        "NEXT_RUNTIME",
+        "NODE_ENV",
+        "NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID",
+        "NEXT_PUBLIC_USERCENTRICS_RULESET_ID",
+        "DEFAULT_PROJECT_NAME",
+        "DEFAULT_ORGANIZATION_NAME",
+        "SENTRY_ORG",
+        "SENTRY_PROJECT",
+        "SENTRY_AUTH_TOKEN",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "FORCE_ASSET_CDN",
+        "ASSET_CDN_S3_ENDPOINT",
+        "ASSETS_URL",
+        "POSTHOG_URL",
+        "CONFIGCAT_URL",
+        "NEXT_PAYBILL_PROJECTS_URL",
+        "NEXT_PAYBILL_PROJECTS_URL_WS",
+        "SITE_NAME"
+      ],
+      "passThroughEnv": ["CURRENT_CLI_VERSION", "GIT_COMMIT_SHA"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "www#build": {
+      "dependsOn": ["^build"],
+      "env": [
+        "ANALYZE",
+        "CI",
+        "NEXT_PUBLIC_PLATFORM_URL",
+        "NEXT_PUBLIC_DOCS_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_HCAPTCHA_SITE_KEY",
+        "HCAPTCHA_SECRET_KEY",
+        "NODE_ENV",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID",
+        "NEXT_PUBLIC_BASE_PATH",
+        "NEXT_PUBLIC_USERCENTRICS_RULESET_ID",
+        "GITHUB_CHANGELOG_APP_ID",
+        "GITHUB_CHANGELOG_APP_INSTALLATION_ID",
+        "GITHUB_CHANGELOG_APP_REST_KEY",
+        "GITHUB_CHANGELOG_APP_PRIVATE_KEY",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+        "npm_lifecycle_event",
+        "FORCE_ASSET_CDN",
+        "ASSET_CDN_S3_ENDPOINT",
+        "SITE_NAME"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", ".contentlayer/**"]
+    },    
+    "lint": {
+      "outputs": []
+    },
+    "clean": {
+      "outputs": [],
+      "cache": false
+    },
+    "dev": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    }
+  }
+}

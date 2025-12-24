@@ -1,0 +1,56 @@
+{
+  "name": "paybill",
+  "description": "The Database Development Platform.",
+  "version": "0.0.0",
+  "author": "Paybill KE Limited.",
+  "license": "",
+  "private": true,
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "build": "turbo run build",
+    "build:platform": "turbo run build --filter=platform",
+    "build:platform:docker": "bash scripts/build-platform.sh",
+    "build:docs": "turbo run build --filter=docs",
+    "build:www": "turbo run build --filter=www",
+    "clean": "turbo run clean --parallel && rimraf -G node_modules/{*,.bin,.modules.yaml}",
+    "dev": "turbo run dev --parallel",
+    "dev:platform": "turbo run dev --filter=platform --parallel",
+    "dev:docs": "turbo run dev --filter=docs --parallel",
+    "dev:www": "turbo run dev --filter=www --parallel",
+    "lint": "turbo run lint",
+    "typecheck": "turbo --continue typecheck",
+    "test:prettier": "prettier --cache --check '{apps,packages}/**/*.{js,jsx,ts,tsx,css,md,mdx,json}'",
+    "format": "prettier --cache --write '{apps,packages}/**/*.{js,jsx,ts,tsx,css,md,mdx,json}'",
+    "test:platform": "turbo run test --filter=platform",
+    "test:www": "turbo run test --filter=www",
+    "test:docs": "turbo run test --filter=docs",
+    "test:platform:watch": "turbo run test --filter=platform -- watch",
+    "test:www:watch": "turbo run test --filter=www -- watch",
+    "test:docs:watch": "turbo run test --filter=docs -- watch",
+    "e2e": "pnpm --prefix e2e/platform run e2e",
+    "perf:kong": "ab -t 5 -c 20 -T application/json http://localhost:8000/",
+    "platform:codegen": "cd packages/platform-api-types && pnpm run codegen",
+    "knip": "pnpx knip@~5.50.0"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.410.0",
+    "@types/node": "catalog:",
+    "eslint": "^9.0.0",
+    "prettier": "3.2.4",
+    "rimraf": "^6.0.0",
+    "sass": "^1.72.0",
+    "supports-color": "^8.0.0",
+    "turbo": "2.3.3",
+    "typescript": "catalog:"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paybilldev/platform.git"
+  },
+  "engines": {
+    "pnpm": "10.18",
+    "node": ">=22"
+  },
+  "keywords": ["storage", "functions", "database", "auth"],
+  "packageManager": "pnpm@10.18.0"
+}

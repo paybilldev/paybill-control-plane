@@ -1,0 +1,5 @@
+apis:
+  platform:
+    root: http://localhost:4000/docs/json
+    x-openapi-ts:
+      output: ./types/platform.d.ts

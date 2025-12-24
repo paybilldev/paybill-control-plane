@@ -1,0 +1,32 @@
+description = "Prefer '%r' to '%s'."
+level = "ERROR"
+words = [
+    [
+        "eg.",
+        "e.g.",
+    ],
+    [
+        "eg",
+        "e.g.",
+    ],
+    [
+        "ie.",
+        "i.e.",
+    ],
+    [
+        "ie",
+        "i.e.",
+    ],
+    [
+        "PostgreSQL",
+        "Postgres",
+    ],
+    [
+        "MySql",
+        "MySQL"
+    ],
+    [
+        "concurrent clients",
+        "concurrent connections",
+    ],
+]

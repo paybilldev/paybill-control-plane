@@ -1,0 +1,4 @@
+{
+  "$schema": "./enabled-features.schema.json",
+  "billing:all": true
+}

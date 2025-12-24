@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "platform-api",
+      "path": "./"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "node_modules/": true,
+    }
+  }
+}

@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  platform:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.platform
+      target: dev
+    ports:
+      - 4000:4000
+  platform-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.platform.api
+      target: dev
+    ports:
+      - 8080:8080
+  mail:
+    container_name: platform-mail
+    image: inbucket/inbucket:3.0.3
+    ports:
+      - '2500:2500' # SMTP
+      - '9000:9000' # web interface
+      - '1100:1100' # POP3
+  db:
+    restart: 'no'
+    volumes:
+      # Always use a fresh database when developing
+      - /var/lib/postgresql/data
+      - ./dev/data.sql:/docker-entrypoint-initdb.d/seed.sql

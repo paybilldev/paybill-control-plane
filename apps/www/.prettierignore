@@ -1,0 +1,10 @@
+.expo
+.next
+node_modules
+package-lock.json
+docker*
+out
+public/images/*
+# ignore files with custom js formatting
+public
+.contentlayer
